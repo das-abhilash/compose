@@ -114,7 +114,7 @@ fun GameGround(offset: Float) {
             }
             LaunchedEffect(Unit) {
                 for (i in 0..1000) {
-                    delay(1000)
+                    delay(800)
                     val lisst = list.toMutableList()
                     lisst.add(i.toString())
                     if (lisst.size > 10) {
