@@ -3,7 +3,6 @@ package com.example.compose
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -13,12 +12,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Slider
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +38,10 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.compose.ui.theme.ComposeTheme
 import kotlinx.coroutines.delay
 
@@ -50,22 +55,22 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-//                    GameGround(0.5f)
+                    GameGround()
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun GameGround(offset: Float) {
+fun GameGround() {
+    var progress by remember { mutableStateOf(0.5f) }
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painterResource(R.drawable.bg),
             contentDescription = "",
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.wrapContentSize()
         )
 
         Image(
@@ -81,7 +86,19 @@ fun GameGround(offset: Float) {
                 .padding(top = 60.dp),
             contentAlignment = Alignment.TopCenter
         ) {
-            Column {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Level",
+                    color = Color.White,
+                    modifier = Modifier.padding(10.dp)
+                )
+
+                Slider(
+                    value = progress,
+                    onValueChange = { progress = it },
+                    modifier = Modifier.padding(10.dp)
+                )
+
                 Text(
                     text = "Pop",
                     color = Color.White
@@ -95,12 +112,14 @@ fun GameGround(offset: Float) {
                     Image(
                         painterResource(R.drawable.pop_bg),
                         contentDescription = "",
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(70.dp)
                     )
                     Image(
                         painterResource(R.drawable.pop),
                         contentDescription = "",
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(50.dp)
                     )
                 }
             }
@@ -109,12 +128,12 @@ fun GameGround(offset: Float) {
             }
             for (i in list) {
                 key(i) {
-                    ballRow(i)
+                    ballRow()
                 }
             }
             LaunchedEffect(Unit) {
                 for (i in 0..1000) {
-                    delay(800)
+                    delay(if (progress == 0f) 100 else (progress * 2000).toLong())
                     val lisst = list.toMutableList()
                     lisst.add(i.toString())
                     if (lisst.size > 10) {
@@ -124,51 +143,39 @@ fun GameGround(offset: Float) {
                 }
             }
         }
-
-//        for (i in 0..100) {
-//            var start = mutableStateOf(false)
-
-        /*LaunchedEffect(Unit) {
-//            start = true
-            for (i in 0..100) {
-                map[i]?.value = true
-                delay(500)
-            }
-        }*/
     }
 }
 
 @Composable
-fun ballRow(id: String) {
+fun ballRow() {
     var start by remember { mutableStateOf(true) }
     val duration = 10000
     val configuration = LocalConfiguration.current
     val size by animateDpAsState(
-        if (start) 0.dp else 250.dp,
+        if (start) 0.dp else 200.dp,
         tween(duration)
     )
     val yOffset by animateDpAsState(
-        if (start) 0.dp else configuration.screenHeightDp.dp,
+        if (start) 0.dp else configuration.screenHeightDp.dp * 1.2f,
         tween(duration)
     )
     val xOffset1 by animateDpAsState(
-        if (start) 0.dp else -configuration.screenHeightDp.dp / 5,
+        if (start) 0.dp else -configuration.screenHeightDp.dp / 3,
         tween(duration)
     )
     val xOffset2 by animateDpAsState(if (start) 0.dp else 0.dp)
     val xOffset3 by animateDpAsState(
-        if (start) 0.dp else configuration.screenHeightDp.dp / 5,
+        if (start) 0.dp else configuration.screenHeightDp.dp / 3,
         tween(duration)
     )
-
+// https://api.mocklets.com/p68543/hook
     LaunchedEffect(Unit) {
-//        delay(500)
         start = false
     }
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(top = 315.dp),
         contentAlignment = Alignment.TopCenter
 
@@ -197,7 +204,7 @@ fun ballRow(id: String) {
                     painterResource(list[0]),
                     contentDescription = "",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
+                    modifier = Modifier.wrapContentSize()
                         .clickable {
                             if (list[0] == R.drawable.square) {
                                 explode = true
@@ -208,7 +215,7 @@ fun ballRow(id: String) {
                     painterResource(R.drawable.explode),
                     contentDescription = "",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
+                    modifier = Modifier.wrapContentSize()
                         .scale(scale)
                 )
             }
@@ -226,7 +233,7 @@ fun ballRow(id: String) {
                     painterResource(list[1]),
                     contentDescription = "",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
+                    modifier = Modifier.wrapContentSize()
                         .clickable {
                             if (list[1] == R.drawable.square) {
                                 explode = true
@@ -237,7 +244,7 @@ fun ballRow(id: String) {
                     painterResource(R.drawable.explode),
                     contentDescription = "",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
+                    modifier = Modifier.wrapContentSize()
                         .scale(scale)
                 )
             }
@@ -255,7 +262,7 @@ fun ballRow(id: String) {
                     painterResource(list[2]),
                     contentDescription = "",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
+                    modifier = Modifier.wrapContentSize()
                         .clickable {
                             if (list[2] == R.drawable.square) {
                                 explode = true
@@ -266,7 +273,7 @@ fun ballRow(id: String) {
                     painterResource(R.drawable.explode),
                     contentDescription = "",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
+                    modifier = Modifier.wrapContentSize()
                         .scale(scale)
                 )
             }
@@ -275,8 +282,36 @@ fun ballRow(id: String) {
     }
 }
 
+@Composable
+fun LottieAnimation() {
+    var isLottiePlaying by remember {
+        mutableStateOf(true)
+    }
+    var animationSpeed by remember {
+        mutableStateOf(1f)
+    }
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec
+            .RawRes(R.raw.blast)
+    )
+
+    // to control the lottie animation
+    val lottieAnimation by animateLottieCompositionAsState(
+        // pass the composition created above
+        composition,
+        // Iterates Forever
+        iterations = LottieConstants.IterateForever,
+        // Lottie and pause/play
+        isPlaying = isLottiePlaying,
+        // Increasing the speed of change Lottie
+        speed = animationSpeed,
+        restartOnPlay = false
+
+    )
+}
+
 @Preview
 @Composable
 fun preview() {
-    GameGround(0.5f)
+    GameGround()
 }
